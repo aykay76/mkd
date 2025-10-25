@@ -3,6 +3,9 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Force dynamic rendering - don't try to statically generate at build time
+export const dynamic = 'force-dynamic'
+
 // Helper function to calculate distance between two points using Haversine formula
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 3958.8 // Earth's radius in miles

@@ -3,6 +3,9 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Force dynamic rendering - don't try to statically generate at build time
+export const dynamic = 'force-dynamic'
+
 // Helper function to get coordinates from postcode
 async function getCoordinatesFromPostcode(postcode: string): Promise<{ lat: number; lng: number } | null> {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY

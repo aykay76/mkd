@@ -3,6 +3,9 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Force dynamic rendering - don't try to statically generate at build time
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const services = await prisma.service.findMany({
