@@ -1,7 +1,7 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import React from 'react';
 import { 
   Calendar, 
   Users, 
@@ -22,53 +22,45 @@ interface Stats {
   totalCustomers: number
 }
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>({
+export default async function AdminDashboard() {
+  const cookieStore = cookies();
+  const auth = cookieStore.get('admin_auth')?.value;
+  if (auth !== process.env.ADMIN_PASSWORD) {
+    redirect('/admin-login');
+  }
+  // Fetch dashboard data server-side
+  let stats = {
     totalBookings: 0,
     pendingBookings: 0,
     completedBookings: 0,
     totalRevenue: 0,
     monthlyRevenue: 0,
     totalCustomers: 0
-  })
-  const [recentBookings, setRecentBookings] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchDashboardData()
-  }, [])
-
-  const fetchDashboardData = async () => {
-    try {
-      const [statsRes, bookingsRes] = await Promise.all([
-        fetch('/api/admin/stats'),
-        fetch('/api/admin/bookings?limit=5')
-      ])
-      
-      if (!statsRes.ok || !bookingsRes.ok) {
-        throw new Error('Failed to fetch data')
-      }
-      
-      const statsData = await statsRes.json()
-      const bookingsData = await bookingsRes.json()
-      
-      // Ensure stats has all required fields with defaults
-      setStats({
+  };
+  let recentBookings: any[] = [];
+  try {
+    const [statsRes, bookingsRes] = await Promise.all([
+      fetch(process.env.NEXT_PUBLIC_BASE_URL + '/api/admin/stats'),
+      fetch(process.env.NEXT_PUBLIC_BASE_URL + '/api/admin/bookings?limit=5')
+    ]);
+    if (statsRes.ok) {
+      const statsData = await statsRes.json();
+      stats = {
         totalBookings: statsData.totalBookings || 0,
         pendingBookings: statsData.pendingBookings || 0,
         completedBookings: statsData.completedBookings || 0,
         totalRevenue: statsData.totalRevenue || 0,
         monthlyRevenue: statsData.monthlyRevenue || 0,
         totalCustomers: statsData.totalCustomers || 0
-      })
-      setRecentBookings(bookingsData.bookings || [])
-    } catch (error) {
-      console.error('Failed to fetch dashboard data:', error)
-    } finally {
-      setLoading(false)
+      };
     }
+    if (bookingsRes.ok) {
+      const bookingsData = await bookingsRes.json();
+      recentBookings = bookingsData.bookings || [];
+    }
+  } catch (error) {
+    // Optionally log error
   }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
@@ -192,9 +184,7 @@ export default function AdminDashboard() {
             </Link>
           </div>
           
-          {loading ? (
-            <p className="text-center text-gray-500 py-8">Loading...</p>
-          ) : recentBookings.length === 0 ? (
+          {recentBookings.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No bookings yet</p>
           ) : (
             <div className="overflow-x-auto">
