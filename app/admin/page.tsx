@@ -45,10 +45,22 @@ export default function AdminDashboard() {
         fetch('/api/admin/bookings?limit=5')
       ])
       
+      if (!statsRes.ok || !bookingsRes.ok) {
+        throw new Error('Failed to fetch data')
+      }
+      
       const statsData = await statsRes.json()
       const bookingsData = await bookingsRes.json()
       
-      setStats(statsData)
+      // Ensure stats has all required fields with defaults
+      setStats({
+        totalBookings: statsData.totalBookings || 0,
+        pendingBookings: statsData.pendingBookings || 0,
+        completedBookings: statsData.completedBookings || 0,
+        totalRevenue: statsData.totalRevenue || 0,
+        monthlyRevenue: statsData.monthlyRevenue || 0,
+        totalCustomers: statsData.totalCustomers || 0
+      })
       setRecentBookings(bookingsData.bookings || [])
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
@@ -90,25 +102,25 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard 
             title="Total Bookings"
-            value={stats.totalBookings.toString()}
+            value={(stats.totalBookings || 0).toString()}
             icon={<Calendar className="w-6 h-6" />}
             color="blue"
           />
           <StatCard 
             title="Pending"
-            value={stats.pendingBookings.toString()}
+            value={(stats.pendingBookings || 0).toString()}
             icon={<Calendar className="w-6 h-6" />}
             color="yellow"
           />
           <StatCard 
             title="Total Revenue"
-            value={`£${stats.totalRevenue.toFixed(0)}`}
+            value={`£${(stats.totalRevenue || 0).toFixed(0)}`}
             icon={<DollarSign className="w-6 h-6" />}
             color="green"
           />
           <StatCard 
             title="Customers"
-            value={stats.totalCustomers.toString()}
+            value={(stats.totalCustomers || 0).toString()}
             icon={<Users className="w-6 h-6" />}
             color="purple"
           />
