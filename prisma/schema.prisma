@@ -34,7 +34,7 @@ model Customer {
 
 model Service {
   id          String    @id @default(cuid())
-  name        String
+  name        String    @unique
   description String
   basePrice   Float
   duration    Int       // in minutes
@@ -89,7 +89,7 @@ model Expense {
 
 model Product {
   id            String    @id @default(cuid())
-  name          String
+  name          String    @unique
   description   String
   amazonUrl     String
   imageUrl      String?
@@ -102,7 +102,7 @@ model Product {
 
 model SocialLink {
   id        String    @id @default(cuid())
-  platform  String    // instagram, tiktok, facebook, youtube
+  platform  String    @unique  // instagram, tiktok, facebook, youtube
   url       String
   isActive  Boolean   @default(true)
   order     Int       @default(0)
