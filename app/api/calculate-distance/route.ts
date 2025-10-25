@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
-
 // Force dynamic rendering - don't try to statically generate at build time
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+let prisma: PrismaClient
+
+function getPrismaClient() {
+  if (!prisma) {
+    prisma = new PrismaClient()
+  }
+  return prisma
+}
 
 // Helper function to calculate distance between two points using Haversine formula
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -60,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Get service details
-    const service = await prisma.service.findUnique({
+    const service = await getPrismaClient().service.findUnique({
       where: { id: serviceId }
     })
     

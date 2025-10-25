@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
-
 // Force dynamic rendering - don't try to statically generate at build time
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+let prisma: PrismaClient
+
+function getPrismaClient() {
+  if (!prisma) {
+    prisma = new PrismaClient()
+  }
+  return prisma
+}
 
 export async function GET() {
   try {
-    const services = await prisma.service.findMany({
+    const services = await getPrismaClient().service.findMany({
       where: { isActive: true },
       orderBy: { order: 'asc' }
     })
@@ -23,7 +31,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     
-    const service = await prisma.service.create({
+    const service = await getPrismaClient().service.create({
       data: {
         name: data.name,
         description: data.description,

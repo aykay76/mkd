@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
-
 // Force dynamic rendering - don't try to statically generate at build time
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+let prisma: PrismaClient
+
+function getPrismaClient() {
+  if (!prisma) {
+    prisma = new PrismaClient()
+  }
+  return prisma
+}
 
 export async function GET() {
   try {
@@ -12,10 +20,10 @@ export async function GET() {
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     
     // Get all bookings
-    const allBookings = await prisma.booking.findMany()
+    const allBookings = await getPrismaClient().booking.findMany()
     
     // Get monthly bookings
-    const monthlyBookings = await prisma.booking.findMany({
+    const monthlyBookings = await getPrismaClient().booking.findMany({
       where: {
         createdAt: {
           gte: firstDayOfMonth
@@ -24,7 +32,7 @@ export async function GET() {
     })
     
     // Get all customers
-    const customers = await prisma.customer.findMany()
+    const customers = await getPrismaClient().customer.findMany()
     
     // Calculate stats
     const totalBookings = allBookings.length

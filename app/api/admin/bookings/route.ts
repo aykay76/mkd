@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
-
 // Force dynamic rendering - don't try to statically generate at build time
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+let prisma: PrismaClient
+
+function getPrismaClient() {
+  if (!prisma) {
+    prisma = new PrismaClient()
+  }
+  return prisma
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const limit = searchParams.get('limit')
     
-    const bookings = await prisma.booking.findMany({
+    const bookings = await getPrismaClient().booking.findMany({
       include: {
         customer: true,
         service: true
@@ -30,7 +38,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const { bookingId, status, internalNotes } = await request.json()
     
-    const booking = await prisma.booking.update({
+    const booking = await getPrismaClient().booking.update({
       where: { id: bookingId },
       data: {
         status,

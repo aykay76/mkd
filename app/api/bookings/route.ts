@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
-
 // Force dynamic rendering - don't try to statically generate at build time
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+let prisma: PrismaClient
+
+function getPrismaClient() {
+  if (!prisma) {
+    prisma = new PrismaClient()
+  }
+  return prisma
+}
 
 // Helper function to get coordinates from postcode
 async function getCoordinatesFromPostcode(postcode: string): Promise<{ lat: number; lng: number } | null> {
@@ -48,7 +56,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 export async function GET() {
   try {
-    const bookings = await prisma.booking.findMany({
+    const bookings = await getPrismaClient().booking.findMany({
       include: {
         customer: true,
         service: true
@@ -67,14 +75,14 @@ export async function POST(request: NextRequest) {
     const data = await request.json()
     
     // Get or create customer
-    let customer = await prisma.customer.findUnique({
+    let customer = await getPrismaClient().customer.findUnique({
       where: { email: data.email }
     })
     
     const coords = await getCoordinatesFromPostcode(data.postcode)
     
     if (!customer) {
-      customer = await prisma.customer.create({
+      customer = await getPrismaClient().customer.create({
         data: {
           name: data.name,
           email: data.email,
@@ -87,7 +95,7 @@ export async function POST(request: NextRequest) {
       })
     } else {
       // Update customer info if changed
-      customer = await prisma.customer.update({
+      customer = await getPrismaClient().customer.update({
         where: { id: customer.id },
         data: {
           name: data.name,
@@ -101,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Get service
-    const service = await prisma.service.findUnique({
+    const service = await getPrismaClient().service.findUnique({
       where: { id: data.serviceId }
     })
     
@@ -126,7 +134,7 @@ export async function POST(request: NextRequest) {
     const totalCost = service.basePrice + mileageCost
     
     // Create booking
-    const booking = await prisma.booking.create({
+    const booking = await getPrismaClient().booking.create({
       data: {
         customerId: customer.id,
         serviceId: service.id,
