@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  role          String    @default("admin")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  email       String    @unique
+  phone       String
+  address     String
+  postcode    String
+  latitude    Float?
+  longitude   Float?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
+}
+
+model Service {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  basePrice   Float
+  duration    Int       // in minutes
+  category    String    // e.g., "Exterior", "Interior", "Full Detail"
+  isActive    Boolean   @default(true)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
+}
+
+model Booking {
+  id              String    @id @default(cuid())
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  serviceId       String
+  service         Service   @relation(fields: [serviceId], references: [id])
+  scheduledDate   DateTime
+  scheduledTime   String
+  status          String    @default("pending") // pending, confirmed, completed, cancelled
+  
+  // Pricing details
+  servicePrice    Float
+  distanceMiles   Float
+  mileageCost     Float
+  totalCost       Float
+  
+  // Location
+  customerAddress String
+  customerLat     Float
+  customerLng     Float
+  
+  // Notes
+  notes           String?
+  internalNotes   String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+}
+
+model Expense {
+  id          String    @id @default(cuid())
+  date        DateTime
+  category    String    // e.g., "Supplies", "Fuel", "Equipment", "Marketing"
+  description String
+  amount      Float
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  description   String
+  amazonUrl     String
+  imageUrl      String?
+  category      String
+  isActive      Boolean   @default(true)
+  order         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model SocialLink {
+  id        String    @id @default(cuid())
+  platform  String    // instagram, tiktok, facebook, youtube
+  url       String
+  isActive  Boolean   @default(true)
+  order     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
